@@ -12,10 +12,14 @@ st.set_page_config(page_title="Rock–Paper–Scissors", layout="wide")
 
 BUDGET_URL=os.getenv("BUDGET_URL","https://raw.githubusercontent.com/RahulBhattacharya1/shared_config/main/budget.py")
 DEF={"COOLDOWN_SECONDS":30,"DAILY_LIMIT":40,"HOURLY_SHARED_CAP":250,"DAILY_BUDGET":1.00,"EST_COST_PER_GEN":1.00,"VERSION":"fallback-local"}
-def _fetch(u): m=types.ModuleType("b"); 
-with urllib.request.urlopen(u,timeout=5) as r: code=r.read().decode()
-exec(compile(code,"b","exec"),m.__dict__); 
-return {k:getattr(m,k,DEF[k]) for k in DEF}
+def _fetch(u: str) -> dict:
+    """Fetch remote budget.py and extract expected keys with fallbacks."""
+    mod = types.ModuleType("budget_remote")
+    with urllib.request.urlopen(u, timeout=5) as r:
+        code = r.read().decode()
+    exec(compile(code, "budget_remote", "exec"), mod.__dict__)
+    return {k: getattr(mod, k, DEF[k]) for k in DEF}
+
 def _cfg(ttl=300):
     now=time.time(); c=st.session_state.get("_b"); ts=st.session_state.get("_bts",0)
     if c and (now-ts)<ttl: return c
